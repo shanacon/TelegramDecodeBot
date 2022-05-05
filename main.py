@@ -8,54 +8,44 @@ from dotenv import load_dotenv
 from ReadEvent import *
 import os
 ##
-username = ""
-taglist = []
-def readtag():
-    global taglist
-    if os.path.exists('SubscriptTag.txt'):
-        with open('SubscriptTag.txt') as f:
-            tags = f.readlines()
-            for line in tags:
-                user = line.split(' ')[0]
-                tag = line.split(' ')[1]
-                taglist.append(tag)
-                # if user == username :
-                #     taglist.append(tag)
-    else :
-        taglist = []
-readtag()
-##
 load_dotenv()
 token = os.getenv('TOKEN')
 updater = Updater(token=token, use_context = True)
 dispatcher = updater.dispatcher
 ##
 def start(update, context): # 新增指令/start
-    # update.message.reply_text('hello, {}'.format(update.message.from_user.first_name))
     message = update.message
     chat = message['chat']
-    update.message.reply_text(text='HI  ' + str(chat['id']))
+    update.message.reply_text(text='HI  ' + str(chat['username']) + '. Enter /help to get more information.')
+##
+def help(update, context): # 新增指令/help
+    message = update.message
+    chat = message['chat']
+    update.message.reply_text(text='This Bot is use to convert the txt file that didn\'t match the encode setting of your computer.\nJust send the txt file you want to decode.\n Then we will send the converted file with utf-8 encoded txt file.')
 ##
 def downloader(update, context):
-    DocName = str(update.message['chat']['id']) + ".txt"
-    file = context.bot.get_file(update.message.document).download(custom_path = "DownloadFile/" + DocName)
-    lines = ReadData(file)
+    DocName = str(update.message['chat']['id']) + '.txt'
+    file = context.bot.get_file(update.message.document).download(custom_path = 'DownloadFile/' + DocName)
+    TxtDetail = ReadData(file)
+    lines = TxtDetail['data']
+    update.message.reply_text(text = 'encoding:' + TxtDetail['encoding'] + '\n' + 'confidence:' + str(TxtDetail['confidence']) + '\n' + 'language:' + TxtDetail['language'])
     # writing to file
     try:
-        with open("CustomFile/" + DocName, "w", encoding='utf-8') as WriteF:
+        with open('CustomFile/' + DocName, 'w', encoding='utf-8') as WriteF:
             for line in lines :
                 WriteF.write(line)
     except Exception as e:
         print(e)
-        update.message.reply_text(text = "Sometihing get wrong")
-    context.bot.send_document(chat_id = str(update.message['chat']['id']), document = open("CustomFile/" + DocName, 'rb'), filename = 'Convert.txt')
+        update.message.reply_text(text = 'Sometihing get wrong')
+    context.bot.send_document(chat_id = str(update.message['chat']['id']), document = open('CustomFile/' + DocName, 'rb'), filename = 'Convert.txt')
     # update.message.reply_text(text = "<a href='" + url + "'>" + info.get('title') + "</a>", parse_mode = ParseMode.HTML)
 
 ##
-def ListCallback(update: Update, context: CallbackContext):
-    update.callback_query.message.edit_text(text = update.callback_query.data)
+# def ListCallback(update: Update, context: CallbackContext):
+#     update.callback_query.message.edit_text(text = update.callback_query.data)
 ##
 dispatcher.add_handler(CommandHandler('start', start))
+dispatcher.add_handler(CommandHandler('help', help))
 # dispatcher.add_handler(CallbackQueryHandler(ListCallback))
 dispatcher.add_handler(MessageHandler(Filters.document, downloader))
 
