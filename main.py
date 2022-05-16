@@ -25,11 +25,15 @@ def help(update, context): # 新增指令/help
 ##
 def downloader(update, context):
     DocName = str(update.message['chat']['id']) + '.txt'
+    if not os.path.exists('DownloadFile'):
+        os.makedirs('DownloadFile')
     file = context.bot.get_file(update.message.document).download(custom_path = 'DownloadFile/' + DocName)
     TxtDetail = ReadData(file)
     lines = TxtDetail['data']
     update.message.reply_text(text = 'encoding:' + TxtDetail['encoding'] + '\n' + 'confidence:' + str(TxtDetail['confidence']) + '\n' + 'language:' + TxtDetail['language'])
     # writing to file
+    if not os.path.exists('CustomFile'):
+        os.makedirs('CustomFile')
     try:
         with open('CustomFile/' + DocName, 'w', encoding='utf-8') as WriteF:
             for line in lines :
